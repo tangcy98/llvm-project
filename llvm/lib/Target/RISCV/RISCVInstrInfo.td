@@ -554,6 +554,14 @@ class ALU_rr<bits<7> funct7, bits<3> funct3, string opcodestr,
   let isCommutable = Commutable;
 }
 
+let hasSideEffects = 0, mayLoad = 1, mayStore = 1 in
+class RC_rr<bits<7> funct7, bits<3> funct3, string opcodestr,
+             bit Commutable = 0>
+    : RVInstR<funct7, funct3, OPC_CUSTOM_0, (outs GPR:$rd), (ins GPR:$rs1, GPR:$rs2),
+              opcodestr, "$rd, $rs1, $rs2"> {
+  let isCommutable = Commutable;
+}
+
 let hasNoSchedulingInfo = 1,
     hasSideEffects = 1, mayLoad = 0, mayStore = 0 in
 class CSR_ir<bits<3> funct3, string opcodestr>
@@ -664,6 +672,8 @@ def SUB  : ALU_rr<0b0100000, 0b000, "sub">,
            Sched<[WriteIALU, ReadIALU, ReadIALU]>;
 def SLL  : ALU_rr<0b0000000, 0b001, "sll">,
            Sched<[WriteShiftReg, ReadShiftReg, ReadShiftReg]>;
+def RCADD: RC_rr<0b1000000, 0b000, "rcadd", /*Commutable*/1>,
+           Sched<[WriteIALU, ReadIALU, ReadIALU]>;
 let IsSignExtendingOpW = 1 in {
 def SLT  : ALU_rr<0b0000000, 0b010, "slt">,
            Sched<[WriteIALU, ReadIALU, ReadIALU]>;
@@ -1228,7 +1238,9 @@ def fpext_oneuse  : unop_oneuse<any_fpextend>;
 
 /// Simple arithmetic operations
 
+
 def : PatGprGpr<add, ADD>;
+/// def : PatGprGpr<add, RCADD>;
 def : PatGprSimm12<add, ADDI>;
 def : PatGprGpr<sub, SUB>;
 def : PatGprGpr<or, OR>;
